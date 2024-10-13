@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Button, View, Text } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { loginGymratsApi } from '@/services/GymratsApi';
 
 const USER_STORAGE_KEY = '@user';
 
@@ -54,6 +55,14 @@ const GoogleAuth = () => {
     }
   };
 
+  const handleGymratsLogin = async () => {
+    try {
+      loginGymratsApi(userInfo)
+    } catch (error) {
+      console.error('Error during Gymrats login:', error);
+    }
+  };
+
   return (
     <View>
       <Button
@@ -64,6 +73,11 @@ const GoogleAuth = () => {
       <Button
         title="Sign out"
         onPress={handleSignOut}
+        disabled={userInfo === null}
+      />
+      <Button
+        title="Test Gymrats API login"
+        onPress={handleGymratsLogin}
         disabled={userInfo === null}
       />
       <Text>{userInfo ? JSON.stringify(userInfo) : 'No user info available'}</Text>
