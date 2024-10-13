@@ -1,38 +1,73 @@
-import React, { useEffect } from 'react';
-import { Button } from 'react-native';
-import {
-  GoogleSignin
-} from '@react-native-google-signin/google-signin';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Button, View, Text } from 'react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const USER_STORAGE_KEY = '@user';
 
 const GoogleAuth = () => {
-  const configureGoogleSignIn = () => {
+  const [userInfo, setUserInfo] = useState(null);
+
+  const configureGoogleSignIn = useCallback(() => {
     GoogleSignin.configure({
-      webClientId: '241434459418-aqs03kol1p860js0oo5314oj87kqfdpj.apps.googleusercontent.com',
-      // androidClientId: '241434459418-2p39oo9fs490uhrim6408p5ka277g70c.apps.googleusercontent.com',
-      iosClientId: '241434459418-05q688tth3s98pfo80i0cg28l1b865v2.apps.googleusercontent.com'
+      webClientId: 'xxxxx',
+      iosClientId: 'yyyyy'
     });
-  };
+  }, []);
+
+  const loadUserInfo = useCallback(async () => {
+    try {
+      const userJSON = await AsyncStorage.getItem(USER_STORAGE_KEY);
+      if (userJSON) {
+        setUserInfo(JSON.parse(userJSON));
+      }
+    } catch (error) {
+      console.error('Error loading user info:', error);
+    }
+  }, []);
 
   useEffect(() => {
     configureGoogleSignIn();
-  })
+    loadUserInfo();
+  }, [configureGoogleSignIn, loadUserInfo]);
 
-  const signIn = async () => {
+  const handleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      console.log(userInfo)
+      const data = await GoogleSignin.signIn();
+      if (data) {
+        await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data));
+        setUserInfo(data);
+      }
     } catch (error) {
-      console.error(error)
+      console.error('Error during sign in:', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await AsyncStorage.removeItem(USER_STORAGE_KEY);
+      await GoogleSignin.signOut();
+      setUserInfo(null);
+    } catch (error) {
+      console.error('Error during sign out:', error);
     }
   };
 
   return (
-    <Button
-      title="Sign in with Google"
-      onPress={signIn}
-    />
+    <View>
+      <Button
+        title="Sign in with Google"
+        onPress={handleSignIn}
+        disabled={userInfo !== null}
+      />
+      <Button
+        title="Sign out"
+        onPress={handleSignOut}
+        disabled={userInfo === null}
+      />
+      <Text>{userInfo ? JSON.stringify(userInfo) : 'No user info available'}</Text>
+      </View>
   );
 };
 
