@@ -10,8 +10,7 @@ export const loginGymratsApi = async (data: any) => {
         'Content-Type': 'application/json'
       }
     });
-    await AsyncStorage.setItem(GYMRATS_TOKEN_STORAGE_KEY, response.data);
-
+    await AsyncStorage.setItem(GYMRATS_TOKEN_STORAGE_KEY, response.data['access_token']);
 
     return response.data;
   } catch (error) {
